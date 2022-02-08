@@ -1,22 +1,29 @@
+const jwt = require("jsonwebtoken");
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const User = require("./models/user");
-const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
-const jwt = require("jsonwebtoken"); // used to create, sign, and verify tokens
+const localStrategy = require("passport-local").Strategy;
+const JwtStrategy = require("passport-jwt").Strategy;
+const User = require("./models/user");
 
-const config = require("./config.js");
-exports.local = passport.use(new LocalStrategy(User.authenticate()));
+const config = require("./config");
+
+exports.local = passport.use(new localStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+console.log("phase 1");
 
 exports.getToken = (user) => {
   return jwt.sign(user, config.secretKey, { expiresIn: 3600 });
 };
 
+console.log("phase 2");
+
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
+
+console.log("phase 3");
 
 exports.jwtPassport = passport.use(
   new JwtStrategy(opts, (jwt_payload, done) => {
@@ -33,4 +40,14 @@ exports.jwtPassport = passport.use(
   })
 );
 
+console.log("phase 4");
+
 exports.verifyUser = passport.authenticate("jwt", { session: false });
+exports.verifyAdmin = (req, res, next) => {
+  if (!!req.user.admin) {
+    return next();
+  }
+  const error = new Error("You are not authorized to perform this operation!");
+  error.status = 403;
+  return next(error);
+};

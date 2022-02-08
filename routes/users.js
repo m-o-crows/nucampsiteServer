@@ -6,11 +6,23 @@ const authenticate = require("../authenticate");
 const router = express.Router();
 
 /* GET users listing. */
-router.get("/", function (req, res, next) {
-  res.send("respond with a resource");
-});
+router
+  .route("/")
+  .get(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    function (req, res, next) {
+      User.find()
+        .then((users) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(users);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
-router.post("/signup", (req, res) => {
+router.post("/signup", async (req, res, next) => {
   User.register(
     new User({ username: req.body.username }),
     req.body.password,
@@ -22,8 +34,6 @@ router.post("/signup", (req, res) => {
       } else {
         if (req.body.firstname) {
           user.firstname = req.body.firstname;
-        }
-        if (req.body.lastname) {
           user.lastname = req.body.lastname;
         }
         user.save((err) => {
@@ -62,7 +72,6 @@ router.get("/logout", (req, res, next) => {
     res.redirect("/");
   } else {
     const err = new Error("You are not logged in!");
-    err.status = 401;
     return next(err);
   }
 });
