@@ -49,29 +49,19 @@ favoriteRouter
       }
     });
   })
-  .put(
-    cors.corsWithOptions,
-    authenticate.verifyAdmin,
-    authenticate.verifyUser,
-    (req, res) => {
-      res.statusCode = 403;
-      res.end("PUT operation not supported on /favorites");
-    }
-  )
-  .delete(
-    cors.corsWithOptions,
-    authenticate.verifyUser,
-    authenticate.verifyAdmin,
-    (req, res, next) => {
-      Favorite.findOneAndDelete()
-        .then((response) => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(response);
-        })
-        .catch((err) => next(err));
-    }
-  );
+  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
+    res.statusCode = 403;
+    res.end("PUT operation not supported on /favorites");
+  })
+  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    Favorite.findOneAndDelete()
+      .then((response) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(response);
+      })
+      .catch((err) => next(err));
+  });
 
 favoriteRouter
   .route("/:campsiteId")
